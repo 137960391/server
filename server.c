@@ -4,6 +4,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <string.h> //使用strlen()函数
+#include "splitstr.h"
 /*
  *sys/socket.h
  * 
@@ -16,26 +17,28 @@
  *
  *该头文件引用hotent结构体和函数gethostbyname
  * */
-int main(void)
+int main(int argc,char * argv[])
 {
-	char * urlHeader = "www.baidu.com";
-        /*
-	char * url ="HPImageArchive.aspx?format=js&n=1";
-	*/
-	
-	char * url="";
 
+	char urlHeader[256] = {0};
+	char url[256] = {0};
+	if(argc < 2 || argc > 2){
+	    printf("输入有误！\n");
+	    return 0;
+	}
+	split_str_left(argv[1],urlHeader,'/');
+	split_str_right(argv[1],url,'/');
 	char sendData[1024]={0};
 	char recvData[1024]={0};
 	int recvNum=0;
 	//1.创建socket连接
 	int http_socket=socket(PF_INET,SOCK_STREAM,0);
+	perror("socket");
 	/*
 	 * PF_INET 用于协议
 	 * AF_INET 用于地址
 	 * */
 	printf("http_socket:%d\n",http_socket);
-	perror("socket");
 	struct sockaddr_in sAdd;
 	sAdd.sin_family=AF_INET;
 	sAdd.sin_port=htons(80);
@@ -47,6 +50,10 @@ int main(void)
 	 * */
 	//perror("socket");
 	struct hostent* phostent=gethostbyname(urlHeader);
+	if(phostent==0){
+	    printf("输入的地址有误!\n");
+	    return 0;
+	}
 	sAdd.sin_addr.s_addr=(*(struct in_addr *)phostent->h_addr_list[0]).s_addr;
 	//2.连接服务器
 	connect(http_socket,(struct sockaddr*)&sAdd,sizeof(struct sockaddr));
