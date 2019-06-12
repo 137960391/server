@@ -17,20 +17,23 @@
  *
  *该头文件引用hotent结构体和函数gethostbyname
  * */
+
+void * add_realloc(void * buff,int multiple,int buffSpace)
+{
+   void * adress = realloc(buff,multiple * buffSpace);
+   if(adress){
+   	return adress;
+   }
+   return 0;
+}
+
 int main(int argc,char * argv[])
 {
 
-	char urlHeader[256] = {0};
-	char url[256] = {0};
 	if(argc < 2 || argc > 2){
 	    printf("输入有误！\n");
 	    return 0;
 	}
-	split_str_left(argv[1],urlHeader,'/');
-	split_str_right(argv[1],url,'/');
-	char sendData[1024]={0};
-	char recvData[1024]={0};
-	int recvNum=0;
 	//1.创建socket连接
 	int http_socket=socket(PF_INET,SOCK_STREAM,0);
 	perror("socket");
@@ -39,9 +42,6 @@ int main(int argc,char * argv[])
 	 * AF_INET 用于地址
 	 * */
 	printf("http_socket:%d\n",http_socket);
-	struct sockaddr_in sAdd;
-	sAdd.sin_family=AF_INET;
-	sAdd.sin_port=htons(80);
 	//sAdd.sin_addr.s_addr=inet_addr("127.0.0.1");
 	//2.绑定端口
 	//bind(http_socket,(struct sockaddr *)&sAdd,sizeof(sAdd));
@@ -49,6 +49,22 @@ int main(int argc,char * argv[])
 	 * linux 与 windows 的区别，linux中struct sokeraddr 并没有设置typedef起别名
 	 * */
 	//perror("socket");
+	get_html(http_socket,argv[1]);
+        printf("\n\nexit\n");
+	return 0;
+}
+
+void get_html(int http_socket,char * referUrl)
+{
+	char urlHeader[256] = {0};
+	char url[256] = {0};
+	split_str_left(referUrl,urlHeader,'/');
+	split_str_right(referUrl,url,'/');
+	char sendData[1024]={0};
+	char recvData[1024]={0};
+	struct sockaddr_in sAdd;
+	sAdd.sin_family=AF_INET;
+	sAdd.sin_port=htons(80);
 	struct hostent* phostent=gethostbyname(urlHeader);
 	if(phostent==0){
 	    printf("输入的地址有误!\n");
@@ -67,19 +83,24 @@ int main(int argc,char * argv[])
 	send(http_socket,sendData,strlen(sendData),0);
 	perror("send:");
 	printf("recvData:\n");
+	int recvNum=0;
+	int count=0;
+	char* strBuff = (char *)malloc(1024);
+	char * reStrBuff = strBuff;
+	int sumStrNum = 0;
+	int num = 0;
 	do
 	{
-		recvNum=recv(http_socket,recvData,64,0);
-		if(recvNum<=0){break;}
-		printf("%s",recvData);
-        /*        if(recvNum<64){
-			break;
-		}else{
-			memset(recvData,0,1024);
-		}
-	*/
-	memset(recvData,0,64);
+	    recvNum=recv(http_socket,recvData,1024,0);
+            sumStrNum += recvNum;
+	    printf("sumStrNum:%d\n",sumStrNum);
+	    reStrBuff = (char *)add_realloc(strBuff,1024,num + 1);
+	    printf("ccs!!!!\n");
+	    memcpy(reStrBuff + count,recvData,recvNum);
+	    if(recvNum<=0){break;}
+	    count = sumStrNum;
+	    num++;
 	}while(recvNum>0);
-        printf("\n\nexit\n");
-	return 0;
+	printf("%s",reStrBuff);
+	free(reStrBuff);
 }
