@@ -1,4 +1,8 @@
-
+#include <stdlib.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include "splitstr.h"
 int split_str(const char * str)
 {
     int strNum;

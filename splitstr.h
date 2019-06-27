@@ -1,5 +1,5 @@
-#ifndef SPLITSTR_H_
-#define SPLITSTR_H
+#ifndef _H_SPLITSTR_H_
+#define _H_SPLITSTR_H_
 
 /**
  * 取指定字符串右侧字符串（不含当前字符）

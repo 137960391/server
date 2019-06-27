@@ -5,6 +5,7 @@
 #include <netdb.h>
 #include <string.h> //使用strlen()函数
 #include "splitstr.h"
+#include "link.h"
 /*
  *sys/socket.h
  * 
@@ -18,6 +19,7 @@
  *该头文件引用hotent结构体和函数gethostbyname
  * */
 
+int get_html(int ,char * );
 void * add_realloc(void * buff,int multiple,int buffSpace)
 {
    void * adress = realloc(buff,multiple * buffSpace);
@@ -54,7 +56,7 @@ int main(int argc,char * argv[])
 	return 0;
 }
 
-void get_html(int http_socket,char * referUrl)
+int get_html(int http_socket,char * referUrl)
 {
 	char urlHeader[256] = {0};
 	char url[256] = {0};
@@ -86,21 +88,22 @@ void get_html(int http_socket,char * referUrl)
 	int recvNum=0;
 	int count=0;
 	char* strBuff = (char *)malloc(1024);
-	char * reStrBuff = strBuff;
 	int sumStrNum = 0;
 	int num = 0;
-	do
-	{
-	    recvNum=recv(http_socket,recvData,1024,0);
-            sumStrNum += recvNum;
-	    printf("sumStrNum:%d\n",sumStrNum);
-	    reStrBuff = (char *)add_realloc(strBuff,1024,num + 1);
-	    printf("ccs!!!!\n");
-	    memcpy(reStrBuff + count,recvData,recvNum);
-	    if(recvNum<=0){break;}
-	    count = sumStrNum;
-	    num++;
-	}while(recvNum>0);
-	printf("%s",reStrBuff);
-	free(reStrBuff);
+	PLINKHEADER pLink = initDataLink();
+        do{
+	    recvNum = recv(http_socket,recvData,1024,0);
+	    addData(pLink,recvData,recvNum);
+            memset(recvData,'\0',1024);
+	}
+	while(recvNum>0);
+	char * str = (char *)malloc(1024*(pLink->len));
+	copyLinkData(pLink,str);
+	printf("html:\n%s",str);
+	freeLink(pLink);
+
 }
+
+
+
+
